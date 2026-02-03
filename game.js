@@ -34,7 +34,8 @@ class Game {
     this.input = {
       keys: {},
       mouse: { x: 0, y: 0, down: false },
-      touch: { active: false, x: 0, y: 0 }
+      touch: { active: false, x: 0, y: 0 },
+      gamepad: { index: null, buttons: {} }
     };
     
     // Game entities
@@ -132,6 +133,18 @@ class Game {
       this.input.touch.active = false;
     });
     
+    // Gamepad connect/disconnect
+    window.addEventListener('gamepadconnected', (e) => {
+      console.log('[Gamepad] connected:', e.gamepad.id);
+      this.input.gamepad.index = e.gamepad.index;
+    });
+    window.addEventListener('gamepaddisconnected', (e) => {
+      if (this.input.gamepad.index === e.gamepad.index) {
+        this.input.gamepad.index = null;
+        this.input.gamepad.buttons = {};
+      }
+    });
+
     // Window resize
     window.addEventListener('resize', () => this.resize());
   }
@@ -306,19 +319,39 @@ class Game {
     const p = this.player;
     let dx = 0;
     let dy = 0;
-    
-    // Keyboard movement
-    if (this.input.keys['KeyW'] || this.input.keys['ArrowUp']) dy -= 1;
-    if (this.input.keys['KeyS'] || this.input.keys['ArrowDown']) dy += 1;
-    if (this.input.keys['KeyA'] || this.input.keys['ArrowLeft']) dx -= 1;
-    if (this.input.keys['KeyD'] || this.input.keys['ArrowRight']) dx += 1;
-    
-    // Virtual joystick input (if available)
-    if (window.touchControls) {
-      const joystick = window.touchControls.getJoystick();
-      if (joystick.active) {
-        dx = joystick.x;
-        dy = joystick.y;
+
+    // Poll gamepad first (if any)
+    const gp = this.pollGamepad();
+    if (gp) {
+      const deadzone = 0.18;
+      const ax = gp.axes?.[0] ?? 0;
+      const ay = gp.axes?.[1] ?? 0;
+      dx = Math.abs(ax) > deadzone ? ax : 0;
+      dy = Math.abs(ay) > deadzone ? ay : 0;
+
+      // D-pad as fallback/override
+      if (gp.buttons?.[14]?.pressed) dx = -1; // left
+      if (gp.buttons?.[15]?.pressed) dx = 1;  // right
+      if (gp.buttons?.[12]?.pressed) dy = -1; // up
+      if (gp.buttons?.[13]?.pressed) dy = 1;  // down
+
+      // Actions
+      if (this.wasButtonPressed(gp, 0)) this.attack(); // A
+      if (this.wasButtonPressed(gp, 1)) this.defend(); // B
+    } else {
+      // Keyboard movement
+      if (this.input.keys['KeyW'] || this.input.keys['ArrowUp']) dy -= 1;
+      if (this.input.keys['KeyS'] || this.input.keys['ArrowDown']) dy += 1;
+      if (this.input.keys['KeyA'] || this.input.keys['ArrowLeft']) dx -= 1;
+      if (this.input.keys['KeyD'] || this.input.keys['ArrowRight']) dx += 1;
+
+      // Virtual joystick input (if available)
+      if (window.touchControls) {
+        const joystick = window.touchControls.getJoystick();
+        if (joystick.active) {
+          dx = joystick.x;
+          dy = joystick.y;
+        }
       }
     }
     
@@ -372,6 +405,27 @@ class Game {
     // Clamp camera to world bounds
     this.camera.x = Math.max(0, Math.min(this.gameWidth - this.gameWidth, this.camera.x));
     this.camera.y = Math.max(0, Math.min(this.gameHeight - this.gameHeight, this.camera.y));
+  }
+
+  pollGamepad() {
+    const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+    let gp = null;
+
+    if (this.input.gamepad.index !== null) {
+      gp = pads[this.input.gamepad.index];
+    }
+    if (!gp) {
+      gp = pads.find(p => p && p.connected) || null;
+      if (gp) this.input.gamepad.index = gp.index;
+    }
+    return gp;
+  }
+
+  wasButtonPressed(gp, index) {
+    const prev = this.input.gamepad.buttons[index] || false;
+    const cur = !!gp.buttons?.[index]?.pressed;
+    this.input.gamepad.buttons[index] = cur;
+    return cur && !prev;
   }
   
   spawnParticle(x, y, color, life = 1) {
