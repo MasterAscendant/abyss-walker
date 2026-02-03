@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Abyss Walker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Background Effects Layer -->
+    <div class="bg-effects">
+        <div class="fog-layer"></div>
+        <div class="particles-container" id="bgParticles"></div>
+    </div>
+
+    <!-- MAIN MENU -->
+    <div class="screen active" id="mainMenu">
+        <div class="menu-container">
+            <div class="logo-section">
+                <h1 class="game-title">
+                    <span class="title-abyss">ABYSS</span>
+                    <span class="title-walker">WALKER</span>
+                </h1>
+                <p class="tagline">Descend into darkness. Rise as legend.</p>
+            </div>
+            
+            <nav class="main-nav">
+                <button class="menu-btn primary" data-action="play">
+                    <span class="btn-icon">⚔️</span>
+                    <span class="btn-text">Enter the Abyss</span>
+                    <div class="btn-glow"></div>
+                </button>
+                <button class="menu-btn" data-action="continue">
+                    <span class="btn-icon">📜</span>
+                    <span class="btn-text">Continue Journey</span>
+                </button>
+                <button class="menu-btn" data-action="settings">
+                    <span class="btn-icon">⚙️</span>
+                    <span class="btn-text">Settings</span>
+                </button>
+                <button class="menu-btn" data-action="credits">
+                    <span class="btn-icon">🏆</span>
+                    <span class="btn-text">Achievements</span>
+                </button>
+            </nav>
+            
+            <div class="version-info">
+                <span>v1.0.0</span>
+                <span class="divider">|</span>
+                <span>© 2026 Void Studios</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- GAME HUD -->
+    <div class="screen" id="gameHUD">
+        <!-- Top Bar -->
+        <div class="hud-top">
+            <!-- Health & Status (Left) -->
+            <div class="hud-section health-section">
+                <div class="player-avatar">
+                    <div class="avatar-frame">
+                        <div class="avatar-inner">
+                            <span>🗡️</span>
+                        </div>
+                        <div class="avatar-glow"></div>
+                    </div>
+                    <div class="level-badge">42</div>
+                </div>
+                
+                <div class="bars-container">
+                    <div class="bar-row">
+                        <span class="bar-icon">❤️</span>
+                        <div class="bar health-bar">
+                            <div class="bar-fill" id="healthFill" style="width: 85%"></div>
+                            <span class="bar-text">8,542 / 10,000</span>
+                        </div>
+                    </div>
+                    <div class="bar-row">
+                        <span class="bar-icon">✨</span>
+                        <div class="bar mana-bar">
+                            <div class="bar-fill" id="manaFill" style="width: 60%"></div>
+                            <span class="bar-text">342 / 500</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Score & Time (Center) -->
+            <div class="hud-section score-section">
+                <div class="score-display">
+                    <span class="score-label">SOULS</span>
+                    <span class="score-value" id="scoreValue">47,293</span>
+                </div>
+                <div class="combo-display" id="comboDisplay">
+                    <span class="combo-count">x12</span>
+                    <span class="combo-label">COMBO</span>
+                </div>
+            </div>
+            
+            <!-- Minimap & Objectives (Right) -->
+            <div class="hud-section minimap-section">
+                <div class="minimap-container">
+                    <canvas id="minimap" width="120" height="120"></canvas>
+                    <div class="minimap-overlay">
+                        <div class="compass">N</div>
+                    </div>
+                </div>
+                <div class="objective-tracker">
+                    <div class="objective-item">
+                        <span class="objective-icon">⚔️</span>
+                        <span class="objective-text">Defeat the Void Lord</span>
+                    </div>
+                    <div class="objective-progress">
+                        <div class="progress-dots">
+                            <span class="dot complete"></span>
+                            <span class="dot complete"></span>
+                            <span class="dot active"></span>
+                            <span class="dot"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- XP Bar (Bottom of top area) -->
+        <div class="xp-bar-container">
+            <div class="xp-bar">
+                <div class="xp-fill" id="xpFill" style="width: 67%"></div>
+            </div>
+            <span class="xp-text">Level 42 • 67%</span>
+        </div>
+        
+        <!-- Damage Numbers Container -->
+        <div class="damage-numbers" id="damageNumbers"></div>
+        
+        <!-- Pause Button -->
+        <button class="pause-btn" id="pauseBtn">
+            <span class="pause-icon"></span>
+        </button>
+    </div>
+
+    <!-- TOUCH CONTROLS -->
+    <div class="touch-controls" id="touchControls">
+        <!-- Left Side: Joystick -->
+        <div class="control-zone left-zone">
+            <div class="joystick" id="joystick">
+                <div class="joystick-base">
+                    <div class="joystick-ring"></div>
+                </div>
+                <div class="joystick-stick" id="joystickStick"></div>
+            </div>
+        </div>
+        
+        <!-- Right Side: Action Buttons -->
+        <div class="control-zone right-zone">
+            <div class="action-buttons">
+                <!-- Special/Dash (Top) -->
+                <button class="action-btn special-btn" id="specialBtn">
+                    <div class="btn-inner">
+                        <span class="btn-icon">⚡</span>
+                        <div class="cooldown-overlay" id="specialCooldown"></div>
+                    </div>
+                    <div class="btn-glow"></div>
+                    <span class="btn-label">ULT</span>
+                </button>
+                
+                <!-- Attack (Main) -->
+                <button class="action-btn attack-btn" id="attackBtn">
+                    <div class="btn-inner">
+                        <span class="btn-icon">⚔️</span>
+                        <div class="btn-ripple"></div>
+                    </div>
+                    <div class="btn-glow"></div>
+                    <span class="btn-label">ATK</span>
+                </button>
+                
+                <!-- Jump (Bottom) -->
+                <button class="action-btn jump-btn" id="jumpBtn">
+                    <div class="btn-inner">
+                        <span class="btn-icon">⬆️</span>
+                    </div>
+                    <div class="btn-glow"></div>
+                    <span class="btn-label">JMP</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Quick Items (Bottom Center) -->
+        <div class="quick-items">
+            <button class="item-slot" data-slot="1">
+                <span class="item-icon">🧪</span>
+                <span class="item-count">3</span>
+            </button>
+            <button class="item-slot" data-slot="2">
+                <span class="item-icon">💣</span>
+                <span class="item-count">5</span>
+            </button>
+            <button class="item-slot" data-slot="3">
+                <span class="item-icon">🛡️</span>
+                <span class="item-count">1</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- PAUSE MENU -->
+    <div class="screen overlay" id="pauseMenu">
+        <div class="overlay-backdrop"></div>
+        <div class="modal pause-modal">
+            <div class="modal-header">
+                <h2>Paused</h2>
+                <div class="pause-decoration"></div>
+            </div>
+            
+            <div class="pause-stats">
+                <div class="stat-item">
+                    <span class="stat-value">47,293</span>
+                    <span class="stat-label">Souls Collected</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">12:34</span>
+                    <span class="stat-label">Time Elapsed</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">156</span>
+                    <span class="stat-label">Enemies Defeated</span>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="modal-btn primary" data-action="resume">
+                    <span>Resume</span>
+                </button>
+                <button class="modal-btn" data-action="restart">
+                    <span>Restart Level</span>
+                </button>
+                <button class="modal-btn" data-action="settings">
+                    <span>Settings</span>
+                </button>
+                <button class="modal-btn danger" data-action="quit">
+                    <span>Abandon Run</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SETTINGS PANEL -->
+    <div class="screen overlay" id="settingsPanel">
+        <div class="overlay-backdrop"></div>
+        <div class="modal settings-modal">
+            <div class="modal-header">
+                <h2>Settings</h2>
+                <button class="close-btn" data-action="closeSettings">✕</button>
+            </div>
+            
+            <div class="settings-tabs">
+                <button class="tab-btn active" data-tab="audio">Audio</button>
+                <button class="tab-btn" data-tab="video">Video</button>
+                <button class="tab-btn" data-tab="controls">Controls</button>
+                <button class="tab-btn" data-tab="gameplay">Gameplay</button>
+            </div>
+            
+            <div class="settings-content">
+                <!-- Audio Tab -->
+                <div class="tab-panel active" id="audioTab">
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <span class="setting-name">Master Volume</span>
+                            <span class="setting-value" id="masterVolValue">80%</span>
+                        </div>
+                        <div class="slider-container">
+                            <input type="range" class="slider" id="masterVolume" min="0" max="100" value="80">
+                            <div class="slider-fill" style="width: 80%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <span class="setting-name">Music</span>
+                            <span class="setting-value" id="musicVolValue">60%</span>
+                        </div>
+                        <div class="slider-container">
+                            <input type="range" class="slider" id="musicVolume" min="0" max="100" value="60">
+                            <div class="slider-fill" style="width: 60%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <span class="setting-name">Sound Effects</span>
+                            <span class="setting-value" id="sfxVolValue">90%</span>
+                        </div>
+                        <div class="slider-container">
+                            <input type="range" class="slider" id="sfxVolume" min="0" max="100" value="90">
+                            <div class="slider-fill" style="width: 90%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-item toggle-item">
+                        <span class="setting-name">Mute All</span>
+                        <label class="toggle">
+                            <input type="checkbox" id="muteToggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Video Tab -->
+                <div class="tab-panel" id="videoTab">
+                    <div class="setting-item">
+                        <span class="setting-name">Graphics Quality</span>
+                        <div class="option-group">
+                            <button class="option-btn">Low</button>
+                            <button class="option-btn active">Medium</button>
+                            <button class="option-btn">High</button>
+                            <button class="option-btn">Ultra</button>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-item toggle-item">
+                        <span class="setting-name">Screen Shake</span>
+                        <label class="toggle">
+                            <input type="checkbox" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="setting-item toggle-item">
+                        <span class="setting-name">Particle Effects</span>
+                        <label class="toggle">
+                            <input type="checkbox" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="setting-item toggle-item">
+                        <span class="setting-name">Damage Numbers</span>
+                        <label class="toggle">
+                            <input type="checkbox" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Controls Tab -->
+                <div class="tab-panel" id="controlsTab">
+                    <div class="setting-item toggle-item">
+                        <span class="setting-name">Vibration</span>
+                        <label class="toggle">
+                            <input type="checkbox" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <span class="setting-name">Joystick Size</span>
+                        <div class="slider-container">
+                            <input type="range" class="slider" min="50" max="150" value="100">
+                            <div class="slider-fill" style="width: 50%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <span class="setting-name">Button Size</span>
+                        <div class="slider-container">
+                            <input type="range" class="slider" min="50" max="150" value="100">
+                            <div class="slider-fill" style="width: 50%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Gameplay Tab -->
+                <div class="tab-panel" id="gameplayTab">
+                    <div class="setting-item toggle-item">
+                        <span class="setting-name">Auto-Aim</span>
+                        <label class="toggle">
+                            <input type="checkbox" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="setting-item toggle-item">
+                        <span class="setting-name">Tutorial Hints</span>
+                        <label class="toggle">
+                            <input type="checkbox" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <span class="setting-name">Difficulty</span>
+                        <div class="option-group">
+                            <button class="option-btn">Normal</button>
+                            <button class="option-btn active">Hard</button>
+                            <button class="option-btn">Nightmare</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GAME OVER SCREEN -->
+    <div class="screen overlay" id="gameOverScreen">
+        <div class="overlay-backdrop dark"></div>
+        <div class="modal game-over-modal">
+            <div class="defeat-animation">
+                <div class="skull-icon">💀</div>
+                <div class="crack-lines"></div>
+            </div>
+            
+            <h2 class="defeat-title">You Have Fallen</h2>
+            <p class="defeat-subtitle">But the abyss remembers your courage</p>
+            
+            <div class="run-stats">
+                <div class="stat-card">
+                    <span class="stat-icon">⚔️</span>
+                    <span class="stat-number" id="enemiesKilled">156</span>
+                    <span class="stat-desc">Enemies Defeated</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">💎</span>
+                    <span class="stat-number" id="soulsEarned">47,293</span>
+                    <span class="stat-desc">Souls Collected</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">⏱️</span>
+                    <span class="stat-number" id="timeSurvived">12:34</span>
+                    <span class="stat-desc">Time Survived</span>
+                </div>
+                <div class="stat-card highlight">
+                    <span class="stat-icon">🏆</span>
+                    <span class="stat-number" id="bestCombo">x47</span>
+                    <span class="stat-desc">Best Combo</span>
+                </div>
+            </div>
+            
+            <div class="rewards-section">
+                <h3>Rewards</h3>
+                <div class="rewards-list">
+                    <div class="reward-item">
+                        <span class="reward-icon">🧬</span>
+                        <span class="reward-name">Void Essence</span>
+                        <span class="reward-amount">+250</span>
+                    </div>
+                    <div class="reward-item legendary">
+                        <span class="reward-icon">👑</span>
+                        <span class="reward-name">Shadow Crown</span>
+                        <span class="reward-tag">NEW!</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="modal-btn primary pulse" data-action="retry">
+                    <span>Try Again</span>
+                </button>
+                <button class="modal-btn" data-action="mainmenu">
+                    <span>Return to Sanctuary</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VICTORY SCREEN -->
+    <div class="screen overlay" id="victoryScreen">
+        <div class="overlay-backdrop gold"></div>
+        <div class="victory-particles" id="victoryParticles"></div>
+        
+        <div class="modal victory-modal">
+            <div class="victory-animation">
+                <div class="crown-icon">👑</div>
+                <div class="rays"></div>
+            </div>
+            
+            <h2 class="victory-title">VICTORY!</h2>
+            <p class="victory-subtitle">The Void Lord has been vanquished</p>
+            
+            <div class="victory-stats">
+                <div class="stat-row">
+                    <span class="stat-label">Completion Time</span>
+                    <span class="stat-value gold">12:34</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Damage Dealt</span>
+                    <span class="stat-value">1,247,893</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Souls Harvested</span>
+                    <span class="stat-value">47,293</span>
+                </div>
+            </div>
+            
+            <div class="rank-display">
+                <span class="rank-label">Rank</span>
+                <span class="rank-grade">S</span>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="modal-btn primary gold" data-action="next">
+                    <span>Continue Journey</span>
+                </button>
+                <button class="modal-btn" data-action="mainmenu">
+                    <span>Return to Sanctuary</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCREEN EFFECTS -->
+    <div class="screen-effects" id="screenEffects">
+        <div class="damage-flash" id="damageFlash"></div>
+        <div class="screen-shake" id="screenShake"></div>
+        <div class="vignette"></div>
+        <div class="scanlines"></div>
+    </div>
+
+    <!-- LOADING SCREEN -->
+    <div class="screen overlay" id="loadingScreen">
+        <div class="loading-content">
+            <div class="loading-spinner">
+                <div class="spinner-ring"></div>
+                <div class="spinner-ring"></div>
+                <div class="spinner-ring"></div>
+            </div>
+            <p class="loading-text">Entering the Abyss...</p>
+            <div class="loading-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="loadingFill"></div>
+                </div>
+                <span class="progress-text" id="loadingText">0%</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="ui-controller.js"></script>
+</body>
+</html>

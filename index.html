@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0a0f">
+  <meta name="color-scheme" content="dark">
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="./manifest.json">
+  
+  <!-- iOS Specific Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Abyss Walker">
+  
+  <!-- iOS Icons -->
+  <link rel="apple-touch-icon" href="./icons/icon-192x192.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="./icons/icon-152x152.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="./icons/icon-192x192.png">
+  <link rel="apple-touch-icon" sizes="167x167" href="./icons/icon-192x192.png">
+  
+  <!-- iOS Startup Images (Splash Screens) -->
+  <link rel="apple-touch-startup-image" href="./assets/splash-2048x2732.png" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+  <link rel="apple-touch-startup-image" href="./assets/splash-1668x2388.png" media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+  <link rel="apple-touch-startup-image" href="./assets/splash-1668x2224.png" media="(device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+  <link rel="apple-touch-startup-image" href="./assets/splash-1536x2048.png" media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+  <link rel="apple-touch-startup-image" href="./assets/splash-1242x2688.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)">
+  <link rel="apple-touch-startup-image" href="./assets/splash-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: landscape)">
+  <link rel="apple-touch-startup-image" href="./assets/splash-828x1792.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+  <link rel="apple-touch-startup-image" href="./assets/splash-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+  <link rel="apple-touch-startup-image" href="./assets/splash-640x1136.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)">
+  
+  <!-- Android/Chrome -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="Abyss Walker">
+  
+  <!-- Microsoft -->
+  <meta name="msapplication-TileColor" content="#0a0a0f">
+  <meta name="msapplication-TileImage" content="./icons/icon-144x144.png">
+  <meta name="msapplication-config" content="none">
+  
+  <!-- Performance & Security -->
+  <meta name="format-detection" content="telephone=no">
+  <meta name="description" content="An immersive dungeon adventure game. Explore the abyss, battle monsters, and survive the depths.">
+  
+  <!-- Preconnect for performance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  <title>Abyss Walker</title>
+  
+  <style>
+    /* Critical CSS - Inline for fast first paint */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #0a0a0f;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+    
+    /* Splash Screen */
+    #splash-screen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(180deg, #0a0a0f 0%, #1a0a2e 50%, #0a0a0f 100%);
+      z-index: 10000;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    
+    #splash-screen.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    
+    .splash-logo {
+      width: 120px;
+      height: 120px;
+      margin-bottom: 24px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    .splash-title {
+      font-size: clamp(2rem, 8vw, 4rem);
+      font-weight: 800;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      text-align: center;
+    }
+    
+    .splash-subtitle {
+      margin-top: 8px;
+      font-size: 1rem;
+      color: #888;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+    }
+    
+    .splash-loader {
+      margin-top: 40px;
+      width: 200px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    
+    .splash-loader-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #667eea, #f093fb);
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+    
+    .splash-status {
+      margin-top: 16px;
+      font-size: 0.875rem;
+      color: #666;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.8; }
+    }
+    
+    /* Main Game Container */
+    #game-container {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0a0a0f;
+    }
+    
+    /* Canvas */
+    #game-canvas {
+      display: block;
+      background: #000;
+      max-width: 100%;
+      max-height: 100%;
+    }
+    
+    /* Install Prompt */
+    #install-prompt {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 24px;
+      background: rgba(20, 20, 30, 0.95);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(102, 126, 234, 0.3);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      z-index: 9999;
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+    
+    #install-prompt.visible {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+    
+    .install-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+    
+    .install-text {
+      flex: 1;
+    }
+    
+    .install-title {
+      font-weight: 600;
+      color: #fff;
+      font-size: 0.95rem;
+    }
+    
+    .install-desc {
+      color: #888;
+      font-size: 0.8rem;
+      margin-top: 2px;
+    }
+    
+    .install-btn {
+      padding: 10px 20px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-weight: 600;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .install-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    .install-close {
+      padding: 8px;
+      background: none;
+      border: none;
+      color: #666;
+      cursor: pointer;
+      font-size: 1.25rem;
+      line-height: 1;
+    }
+    
+    /* iOS Install Instructions */
+    #ios-install-hint {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 10001;
+    }
+    
+    #ios-install-hint.visible {
+      display: flex;
+    }
+    
+    .ios-hint-content {
+      background: #1a1a2e;
+      padding: 20px;
+      border-radius: 16px;
+      max-width: 320px;
+      text-align: center;
+    }
+    
+    .ios-hint-arrow {
+      font-size: 2rem;
+      margin-bottom: 8px;
+      animation: bounce 1s infinite;
+    }
+    
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    /* Touch Controls */
+    #touch-controls {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 100;
+    }
+    
+    .touch-control {
+      pointer-events: auto;
+    }
+    
+    /* Virtual Joystick */
+    #virtual-joystick {
+      position: absolute;
+      bottom: 40px;
+      left: 40px;
+      width: 120px;
+      height: 120px;
+      display: none;
+    }
+    
+    #virtual-joystick.visible {
+      display: block;
+    }
+    
+    .joystick-base {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .joystick-stick {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 50px;
+      height: 50px;
+      margin: -25px 0 0 -25px;
+      border-radius: 50%;
+      background: rgba(102, 126, 234, 0.5);
+      border: 2px solid rgba(102, 126, 234, 0.8);
+      transition: transform 0.05s;
+    }
+    
+    /* Action Buttons */
+    #action-buttons {
+      position: absolute;
+      bottom: 40px;
+      right: 40px;
+      display: none;
+      gap: 16px;
+    }
+    
+    #action-buttons.visible {
+      display: flex;
+    }
+    
+    .action-btn {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.1s;
+      user-select: none;
+    }
+    
+    .action-btn:active {
+      background: rgba(102, 126, 234, 0.5);
+      transform: scale(0.95);
+    }
+    
+    .action-btn.primary {
+      background: rgba(118, 75, 162, 0.3);
+      border-color: rgba(118, 75, 162, 0.6);
+    }
+    
+    /* Fullscreen Button */
+    #fullscreen-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
+      font-size: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 200;
+      transition: all 0.2s;
+    }
+    
+    #fullscreen-btn:hover {
+      background: rgba(102, 126, 234, 0.3);
+    }
+    
+    /* Orientation Warning */
+    #orientation-warning {
+      position: fixed;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #0a0a0f;
+      z-index: 10002;
+      padding: 40px;
+      text-align: center;
+    }
+    
+    #orientation-warning.visible {
+      display: flex;
+    }
+    
+    .orientation-icon {
+      font-size: 4rem;
+      margin-bottom: 24px;
+      animation: rotate 2s ease-in-out infinite;
+    }
+    
+    @keyframes rotate {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(90deg); }
+    }
+    
+    .orientation-text {
+      color: #fff;
+      font-size: 1.25rem;
+    }
+    
+    /* Loading indicator for game */
+    #game-loading {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(10, 10, 15, 0.9);
+      z-index: 9998;
+    }
+    
+    #game-loading.visible {
+      display: flex;
+    }
+    
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(102, 126, 234, 0.3);
+      border-top-color: #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Safe area for notched devices */
+    @supports (padding-top: env(safe-area-inset-top)) {
+      #fullscreen-btn {
+        top: calc(20px + env(safe-area-inset-top));
+        right: calc(20px + env(safe-area-inset-right));
+      }
+      
+      #virtual-joystick {
+        left: calc(40px + env(safe-area-inset-left));
+        bottom: calc(40px + env(safe-area-inset-bottom));
+      }
+      
+      #action-buttons {
+        right: calc(40px + env(safe-area-inset-right));
+        bottom: calc(40px + env(safe-area-inset-bottom));
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Splash Screen -->
+  <div id="splash-screen">
+    <div class="splash-logo">🗡️</div>
+    <h1 class="splash-title">Abyss Walker</h1>
+    <p class="splash-subtitle">Into the Depths</p>
+    <div class="splash-loader">
+      <div class="splash-loader-bar" id="loader-bar"></div>
+    </div>
+    <p class="splash-status" id="loader-status">Loading...</p>
+  </div>
+  
+  <!-- Orientation Warning -->
+  <div id="orientation-warning">
+    <div class="orientation-icon">📱</div>
+    <p class="orientation-text">Please rotate your device to landscape mode</p>
+  </div>
+  
+  <!-- Game Container -->
+  <div id="game-container">
+    <canvas id="game-canvas"></canvas>
+  </div>
+  
+  <!-- Touch Controls -->
+  <div id="touch-controls">
+    <div id="virtual-joystick">
+      <div class="joystick-base"></div>
+      <div class="joystick-stick" id="joystick-stick"></div>
+    </div>
+    
+    <div id="action-buttons">
+      <button class="action-btn" id="btn-attack" aria-label="Attack">⚔️</button>
+      <button class="action-btn primary" id="btn-action" aria-label="Action">🛡️</button>
+    </div>
+  </div>
+  
+  <!-- Fullscreen Button -->
+  <button id="fullscreen-btn" aria-label="Toggle Fullscreen">⛶</button>
+  
+  <!-- Install Prompt -->
+  <div id="install-prompt">
+    <div class="install-icon">🗡️</div>
+    <div class="install-text">
+      <div class="install-title">Install Abyss Walker</div>
+      <div class="install-desc">Add to home screen for full-screen play</div>
+    </div>
+    <button class="install-btn" id="install-btn">Install</button>
+    <button class="install-close" id="install-close">×</button>
+  </div>
+  
+  <!-- iOS Install Hint -->
+  <div id="ios-install-hint">
+    <div class="ios-hint-content">
+      <div class="ios-hint-arrow">⬆️</div>
+      <p>Tap the share button and select<br><strong>"Add to Home Screen"</strong></p>
+      <button class="install-btn" onclick="this.parentElement.parentElement.classList.remove('visible')" style="margin-top: 16px;">Got it</button>
+    </div>
+  </div>
+  
+  <!-- Game Loading Overlay -->
+  <div id="game-loading">
+    <div class="spinner"></div>
+  </div>
+  
+  <!-- Scripts -->
+  <script src="./fullscreen.js"></script>
+  <script src="./wakelock.js"></script>
+  <script src="./touch-controls.js"></script>
+  <script src="./game.js"></script>
+  
+  <script>
+    // Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', async () => {
+        try {
+          const registration = await navigator.serviceWorker.register('./sw.js');
+          console.log('[App] SW registered:', registration.scope);
+          
+          // Handle updates
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                // New update available
+                console.log('[App] New version available');
+                if (confirm('A new version of Abyss Walker is available. Reload to update?')) {
+                  window.location.reload();
+                }
+              }
+            });
+          });
+        } catch (err) {
+          console.error('[App] SW registration failed:', err);
+        }
+      });
+    }
+    
+    // Install Prompt Handling
+    let deferredPrompt = null;
+    const installPrompt = document.getElementById('install-prompt');
+    const installBtn = document.getElementById('install-btn');
+    const installClose = document.getElementById('install-close');
+    const iosHint = document.getElementById('ios-install-hint');
+    
+    // Detect iOS
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                         window.navigator.standalone === true;
+    
+    // Show install prompt after 10 seconds if not installed
+    setTimeout(() => {
+      if (!isStandalone) {
+        if (isIOS) {
+          // Show iOS hint instead
+          // iosHint.classList.add('visible');
+        } else if (deferredPrompt) {
+          installPrompt.classList.add('visible');
+        }
+      }
+    }, 10000);
+    
+    // Before install prompt event
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      
+      if (!isStandalone && !isIOS) {
+        installPrompt.classList.add('visible');
+      }
+    });
+    
+    // Install button click
+    installBtn.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      
+      if (outcome === 'accepted') {
+        console.log('[App] User accepted install');
+      }
+      
+      deferredPrompt = null;
+      installPrompt.classList.remove('visible');
+    });
+    
+    // Close install prompt
+    installClose.addEventListener('click', () => {
+      installPrompt.classList.remove('visible');
+      // Don't show again for this session
+      sessionStorage.setItem('installPromptDismissed', 'true');
+    });
+    
+    // App installed event
+    window.addEventListener('appinstalled', () => {
+      console.log('[App] PWA was installed');
+      deferredPrompt = null;
+      installPrompt.classList.remove('visible');
+    });
+    
+    // Splash screen progress
+    const loaderBar = document.getElementById('loader-bar');
+    const loaderStatus = document.getElementById('loader-status');
+    
+    function updateLoader(progress, status) {
+      loaderBar.style.width = `${progress}%`;
+      if (status) loaderStatus.textContent = status;
+    }
+    
+    // Make updateLoader globally available
+    window.updateLoader = updateLoader;
+    
+    // Hide splash when ready
+    window.hideSplash = function() {
+      updateLoader(100, 'Ready!');
+      setTimeout(() => {
+        document.getElementById('splash-screen').classList.add('hidden');
+      }, 500);
+    };
+    
+    // Orientation handling
+    const orientationWarning = document.getElementById('orientation-warning');
+    
+    function checkOrientation() {
+      if (window.innerWidth < window.innerHeight) {
+        orientationWarning.classList.add('visible');
+      } else {
+        orientationWarning.classList.remove('visible');
+      }
+    }
+    
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
+    checkOrientation();
+    
+    // Simulate loading progress
+    let progress = 0;
+    const loadingInterval = setInterval(() => {
+      progress += Math.random() * 20;
+      if (progress >= 100) {
+        progress = 100;
+        clearInterval(loadingInterval);
+      }
+      updateLoader(progress, progress < 100 ? 'Loading assets...' : 'Starting game...');
+    }, 200);
+    
+    // Hide splash when game signals ready
+    window.addEventListener('game-ready', () => {
+      window.hideSplash();
+    });
+  </script>
+</body>
+</html>
