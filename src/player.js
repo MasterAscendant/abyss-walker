@@ -54,24 +54,46 @@ class PlayerController {
     
     setupGamepad() {
         this.gamepad = null;
+        this.gamepadIndex = null;
         
-        // Listen for gamepad connection
-        this.scene.input.gamepad.on('connected', (pad) => {
-            console.log('Gamepad connected:', pad.id);
-            this.gamepad = pad;
-            this.updateControllerStatus('🎮 Controller Connected');
-        });
+        // iOS Safari requires polling - events don't work reliably
+        // Poll for gamepad connection every 500ms
+        this.gamepadPollInterval = setInterval(() => {
+            this.pollGamepad();
+        }, 500);
         
-        this.scene.input.gamepad.on('disconnected', () => {
-            console.log('Gamepad disconnected');
+        // Also listen for Phaser events as backup
+        if (this.scene.input.gamepad) {
+            this.scene.input.gamepad.on('connected', (pad) => {
+                console.log('Phaser gamepad connected:', pad.id);
+                this.gamepad = pad;
+                this.updateControllerStatus('🎮 Controller Connected');
+            });
+        }
+    }
+    
+    pollGamepad() {
+        // Use raw navigator.getGamepads() API for iOS compatibility
+        const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+        
+        for (let i = 0; i < gamepads.length; i++) {
+            const gp = gamepads[i];
+            if (gp && gp.connected) {
+                if (!this.gamepad || this.gamepadIndex !== i) {
+                    console.log('Raw gamepad detected:', gp.id, 'index:', i);
+                    this.gamepad = gp;
+                    this.gamepadIndex = i;
+                    this.updateControllerStatus('🎮 Controller Connected');
+                }
+                return;
+            }
+        }
+        
+        // No gamepad found
+        if (this.gamepad) {
             this.gamepad = null;
+            this.gamepadIndex = null;
             this.updateControllerStatus('Connect Bluetooth Controller');
-        });
-        
-        // Check for already connected gamepads
-        if (this.scene.input.gamepad.total > 0) {
-            this.gamepad = this.scene.input.gamepad.getPad(0);
-            this.updateControllerStatus('🎮 Controller Connected');
         }
     }
     
@@ -138,23 +160,32 @@ class PlayerController {
         let jumpPressed = false;
         let dashPressed = false;
         
-        // Gamepad input
+        // Gamepad input - use raw API for iOS Safari compatibility
         if (this.gamepad) {
-            // Left stick for movement
-            const leftStickX = this.gamepad.leftStick ? this.gamepad.leftStick.x : 0;
-            if (Math.abs(leftStickX) > 0.1) {
-                moveX = leftStickX;
+            // Refresh gamepad data (required for iOS)
+            const gamepads = navigator.getGamepads();
+            const gp = this.gamepadIndex !== null ? gamepads[this.gamepadIndex] : null;
+            
+            if (gp) {
+                // Left stick (axes 0 = X, 1 = Y)
+                const leftStickX = gp.axes[0];
+                if (Math.abs(leftStickX) > 0.15) {
+                    moveX = leftStickX;
+                }
+                
+                // D-pad buttons (12-15) as alternative
+                if (gp.buttons[14]?.pressed) moveX = -1; // D-pad left
+                if (gp.buttons[15]?.pressed) moveX = 1;  // D-pad right
+                
+                // Button 0 (A on Xbox, X on PS) = Jump
+                if (gp.buttons[0]?.pressed) jumpPressed = true;
+                
+                // Button 1 (B on Xbox, Circle on PS) = Dash
+                if (gp.buttons[1]?.pressed) dashPressed = true;
+                
+                // Button 2 (X on Xbox, Square on PS) = also Jump (alternative)
+                if (gp.buttons[2]?.pressed) jumpPressed = true;
             }
-            
-            // D-pad as alternative
-            if (this.gamepad.left) moveX = -1;
-            if (this.gamepad.right) moveX = 1;
-            
-            // A button (0) or bottom face button for jump
-            jumpPressed = this.gamepad.A || this.gamepad.buttons[0]?.pressed;
-            
-            // B button (1) or right face button for dash
-            dashPressed = this.gamepad.B || this.gamepad.buttons[1]?.pressed;
         }
         
         // Keyboard input
