@@ -42,6 +42,10 @@ class Game {
     this.player = null;
     this.entities = [];
     this.particles = [];
+
+    // Enemy (zombie) spawning
+    this.enemySpawnTimer = 0;
+    this.enemySpawnInterval = 2.0;
     
     // Background sync for high scores
     this.pendingSync = false;
@@ -506,6 +510,43 @@ class Game {
     }
   }
   
+  spawnZombie() {
+    const side = Math.floor(Math.random() * 4);
+    let x, y;
+    switch (side) {
+      case 0: x = -40; y = Math.random() * this.gameHeight; break;
+      case 1: x = this.gameWidth + 40; y = Math.random() * this.gameHeight; break;
+      case 2: x = Math.random() * this.gameWidth; y = -40; break;
+      default: x = Math.random() * this.gameWidth; y = this.gameHeight + 40; break;
+    }
+
+    const zombie = {
+      type: 'zombie',
+      x, y,
+      speed: 90 + Math.random() * 40,
+      update: (dt) => {
+        const dx = this.player.x - zombie.x;
+        const dy = this.player.y - zombie.y;
+        const len = Math.hypot(dx, dy) || 1;
+        zombie.x += (dx / len) * zombie.speed * dt;
+        zombie.y += (dy / len) * zombie.speed * dt;
+      },
+      render: (ctx) => {
+        ctx.save();
+        ctx.translate(zombie.x, zombie.y);
+        ctx.fillStyle = '#22c55e';
+        ctx.beginPath();
+        ctx.arc(0, 0, 12, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#14532d';
+        ctx.fillRect(-10, -14, 20, 6);
+        ctx.restore();
+      }
+    };
+
+    this.entities.push(zombie);
+  }
+
   renderPlayer(ctx) {
     const p = this.player;
     
